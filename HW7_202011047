@@ -6,14 +6,14 @@ from datetime import datetime
 
 def _asos_params(key, stn, s_dt, e_dt, page=1, rows=10):
     return {
-        "ServiceKey": key,  # 입력 키
+        "ServiceKey": key,  # 입력받은 키 사용
         "dataCd": "ASOS",
         "dateCd": "HR",
         "startDt": s_dt.strftime("%Y%m%d"),  
-        "startHh": s_dt.strftime("%H"), 
+        "startHh": s_dt.strftime("%H"),  
         "endDt": e_dt.strftime("%Y%m%d"),
         "endHh": e_dt.strftime("%H"),
-        "stnIds": stn,  # 입력받은 지점번호 사용
+        "stnIds": stn,  
         "dataType": "JSON",
         "pageNo": str(page),
         "numOfRows": str(rows),
@@ -59,7 +59,9 @@ def ASOSCollector_Range(stn_id, start_dt, end_dt, service_key):
 
     df = pd.DataFrame(all_rows) if all_rows else pd.DataFrame()
 
+
     if not df.empty:
+        # 날짜 변환
         if "tm" in df.columns:
             df["tm"] = pd.to_datetime(df["tm"])
 
@@ -71,29 +73,31 @@ def ASOSCollector_Range(stn_id, start_dt, end_dt, service_key):
         rename_map = {"stnId": "stn_id", "stnNm": "stn_nm", "tm": "target"}
         df = df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})
 
+
         df["issue"] = datetime.now().replace(minute=0, second=0, microsecond=0)
 
     return df
 
 
-if __name__ == "__main__":
 
-    SERVICE_KEY = "92fc64557e37328e8fa4a5d7fbe5f9630ed5363d5c85fba44c66d1fa5640f342"  # 사용자 키
+if __name__ == "__main__":
+    
+    SERVICE_KEY = "#여기에 api 코드를 입력해 주세요"  #실행 전 사용자의 키 입력해 주세요!
     STN_ID = "108"  # 서울
 
-
+   
     START_DT = datetime(2025, 11, 18, 00)
     END_DT = datetime(2025, 11, 18, 3)
 
+   
     df_result = ASOSCollector_Range(STN_ID, START_DT, END_DT, SERVICE_KEY)
-
 
     if not df_result.empty:
         print("\n수집된 데이터 미리보기:")
-        print(df_result[['target', 'stn_nm', 'ta', 'hm', 'ws']].head())  # 시간, 지점명, 기온, 습도, 풍속만 출력
-
-
-        save_filename = "ASOS_20251118_00-03.csv"
+        print(df_result[['target', 'stn_nm', 'ta', 'hm', 'ws']].head())  
+        
+        file_date = START_DT.strftime("%Y%m%d")
+        save_filename = f"ASOS_{file_date}_{START_DT.strftime('%H')}-{END_DT.strftime('%H')}.csv"
         df_result.to_csv(save_filename, index=False, encoding="utf-8-sig")
         print(f"\n[성공] 데이터가 '{save_filename}' 파일로 저장되었습니다.")
     else:
