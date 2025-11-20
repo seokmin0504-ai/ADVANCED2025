@@ -1,0 +1,100 @@
+import os
+import requests
+import pandas as pd
+from datetime import datetime
+
+
+def _asos_params(key, stn, s_dt, e_dt, page=1, rows=10):
+    return {
+        "ServiceKey": key,  # 입력 키
+        "dataCd": "ASOS",
+        "dateCd": "HR",
+        "startDt": s_dt.strftime("%Y%m%d"),  
+        "startHh": s_dt.strftime("%H"), 
+        "endDt": e_dt.strftime("%Y%m%d"),
+        "endHh": e_dt.strftime("%H"),
+        "stnIds": stn,  # 입력받은 지점번호 사용
+        "dataType": "JSON",
+        "pageNo": str(page),
+        "numOfRows": str(rows),
+    }
+
+
+def ASOSCollector_Range(stn_id, start_dt, end_dt, service_key):
+    ASOS_API = "http://apis.data.go.kr/1360000/AsosHourlyInfoService/getWthrDataList"
+    all_rows = []
+    page = 1
+
+    print(f"데이터 수집 시작: {start_dt} ~ {end_dt}")
+
+    while True:
+        params = _asos_params(service_key, stn_id, start_dt, end_dt, page=page, rows=10)
+
+        try:
+            r = requests.get(ASOS_API, params=params, timeout=30)
+            r.raise_for_status()
+            j = r.json()
+
+            if j.get("response", {}).get("header", {}).get("resultCode") != "00":
+                print("API 호출 에러:", j.get("response", {}).get("header", {}).get("resultMsg"))
+                break
+
+            body = j.get("response", {}).get("body", {})
+            items = body.get("items", {}).get("item", [])
+            total = int(body.get("totalCount", 0) or 0)
+
+            if not items:
+                break
+
+            all_rows.extend(items)
+            print(f"페이지 {page} 수집 완료 ({len(all_rows)}/{total})")
+
+            if len(all_rows) >= total:
+                break
+            page += 1
+
+        except Exception as e:
+            print(f"에러 발생: {e}")
+            break
+
+    df = pd.DataFrame(all_rows) if all_rows else pd.DataFrame()
+
+    if not df.empty:
+        if "tm" in df.columns:
+            df["tm"] = pd.to_datetime(df["tm"])
+
+        cols_to_numeric = ["ta", "rn", "ws", "wd", "hm"]
+        for c in cols_to_numeric:
+            if c in df.columns:
+                df[c] = pd.to_numeric(df[c], errors="coerce")
+
+        rename_map = {"stnId": "stn_id", "stnNm": "stn_nm", "tm": "target"}
+        df = df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})
+
+        df["issue"] = datetime.now().replace(minute=0, second=0, microsecond=0)
+
+    return df
+
+
+if __name__ == "__main__":
+
+    SERVICE_KEY = "92fc64557e37328e8fa4a5d7fbe5f9630ed5363d5c85fba44c66d1fa5640f342"  # 사용자 키
+    STN_ID = "108"  # 서울
+
+
+    START_DT = datetime(2025, 11, 18, 00)
+    END_DT = datetime(2025, 11, 18, 3)
+
+    df_result = ASOSCollector_Range(STN_ID, START_DT, END_DT, SERVICE_KEY)
+
+
+    if not df_result.empty:
+        print("\n수집된 데이터 미리보기:")
+        print(df_result[['target', 'stn_nm', 'ta', 'hm', 'ws']].head())  # 시간, 지점명, 기온, 습도, 풍속만 출력
+
+
+        save_filename = "ASOS_20251118_00-03.csv"
+        df_result.to_csv(save_filename, index=False, encoding="utf-8-sig")
+        print(f"\n[성공] 데이터가 '{save_filename}' 파일로 저장되었습니다.")
+    else:
+        print("\n[실패] 수집된 데이터가 없습니다.")

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<response> 
+    <header> 
+        <resultCode>0</resultCode> 
+        <resultMsg>NORMAL_SERVICE</resultMsg> 
+    </header> 
+    <body> 
+        <dataType>XML</dataType> 
+        <items> 
+            <item> 
+                 <tm>2019-01-20 01:00</tm> 
+                 <rnum>1</rnum> 
+                 <stnId>108</stnId> 
+<ta>3.6</ta> 
+                 <taQcflg></taQcflg> 
+                 <rn>0.0</rn> 
+                 <rnQcflg></rnQcflg> 
+                 <ws>2.5</ws> 
+                 <wsQcflg></wsQcflg> 
+                 <wd>290</wd> 
+                 <wdQcflg></wdQcflg> 
+                 <hm>76</hm> 
+                 <hmQcflg></hmQcflg> 
+                 <pv>6.0</pv> 
+                 <td>-0.2</td> 
+                 <pa>1007.8</pa> 
+                 <paQcflg></paQcflg> 
+                 <ps>1018.4</ps> 
+                 <psQcflg></psQcflg> 
+ - 8 - 
+ 
+ 
+                 <ss>0.0</ss> 
+                 <ssQcflg>9</ssQcflg> 
+                 <icsr>0.0</icsr> 
+                 <dsnw>0.0</dsnw> 
+                 <hr3Fhsc>0.0</hr3Fhsc> 
+                 <dc10Tca>9</dc10Tca> 
+                 <dc10LmcsCa>8</dc10LmcsCa> 
+                 <clfmAbbrCd></clfmAbbrCd> 
+                 <lcsCh>3</lcsCh> 
+                 <vs>310</vs> 
+                 <gndSttCd>0</gndSttCd> 
+                 <dmstMtphNo>40</dmstMtphNo> 
+                 <ts>0.0</ts> 
+                 <tsQcflg></tsQcflg>
